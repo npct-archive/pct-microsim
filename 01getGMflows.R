@@ -67,7 +67,7 @@ names(flow.eth) = c('msoa1', 'msoa2', 'All', 'WhiteEnglish', 'WhiteIrish',
 
 
 
-#add ethnicity columns to flows file, now ready for saving
+#add 19 ethnicity columns to flows file, now ready for saving
 
 flow.gm = inner_join(flow.gm, flow.eth, by=c("msoa1"="msoa1", "msoa2"="msoa2"))
 saveRDS(flow.gm, file.path('./2-output/','flow.gm.Rds'))    #flows in G.M., MSOA-level
