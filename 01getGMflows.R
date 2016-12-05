@@ -23,7 +23,8 @@ flow.gm = data.frame(stringsAsFactors = F)
 for (i in 1:length(ficheros)) {
     
     flow <- readRDS(paste0(path,ficheros[i]))
-    flow = inner_join(flow, msoas[, c(1,3,4)], by=c('Area.of.usual.residence' = 'LSOA11CD'))
+    flow = inner_join(flow, msoas[, c('LSOA11CD','MSOA11CD','MSOA11NM')], 
+                      by=c('Area.of.usual.residence' = 'LSOA11CD'))
     
     flow = rename(.data = flow, lsoa1 = Area.of.usual.residence ,
                                                  lsoa1.name = Area.Name, 
@@ -31,17 +32,19 @@ for (i in 1:length(ficheros)) {
                                                  msoa1.name = MSOA11NM)
     
     
-    flow = inner_join(flow, msoas[, c(1,3,4)], by=c('Area.of.Workplace' = 'LSOA11CD'))
+    flow = inner_join(flow, msoas[, c('LSOA11CD','MSOA11CD','MSOA11NM')], 
+                      by=c('Area.of.Workplace' = 'LSOA11CD'))
+    
     flow = rename(.data = flow, lsoa2 = Area.of.Workplace,
                                                  lsoa2.name = Area.of.Workplace.name, 
                                                  msoa2 =  MSOA11CD  , 
                                                  msoa2.name = MSOA11NM)
     
     
-    flow = flow[, c(257:260, 1:255)]     #reorder cols to have msoas first
+    flow = flow[, c(257:260, 1:256)]     #reorder cols to have msoas first
     
-    #keep flows only from  G.M. area (only origin OR origin+destination)
-    flow = subset(x = flow,subset = msoa1 %in% msoas.gm$msoa1)
+    #keep flows only from G.M. area (origin must be in G.M.)
+    flow = subset(x = flow, subset = msoa1 %in% msoas.gm$msoa1)
     
     ifelse( i==1, yes = (flow.gm = flow), no = (flow.gm=rbind(flow.gm, flow))   )    
     
@@ -51,7 +54,7 @@ for (i in 1:length(ficheros)) {
                            
 
 #aggregate by msoa orig-dest => get desired GM flow file
-flow.gm <-aggregate(flow.gm[, c(9:259)],by=list(flow.gm$msoa1,flow.gm$msoa2), FUN=sum,na.rm=T)
+flow.gm <-aggregate(flow.gm[, c(9:260)],by=list(flow.gm$msoa1,flow.gm$msoa2), FUN=sum,na.rm=T)
 flow.gm = rename(.data =flow.gm, msoa1 = Group.1, msoa2=Group.2 )
 
 
@@ -70,4 +73,6 @@ names(flow.eth) = c('msoa1', 'msoa2', 'All', 'WhiteEnglish', 'WhiteIrish',
 #add 19 ethnicity columns to flows file, now ready for saving
 
 flow.gm = inner_join(flow.gm, flow.eth, by=c("msoa1"="msoa1", "msoa2"="msoa2"))
+
+
 saveRDS(flow.gm, file.path('./2-output/','flow.gm.Rds'))    #flows in G.M., MSOA-level
