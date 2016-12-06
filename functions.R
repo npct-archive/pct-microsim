@@ -1,38 +1,47 @@
 
-selColumns =    function(singleflow){
+
+selColumns =    function(flow){   #extracts not null cols. for flow + subset to relevant columns
     
-    notnull = which(singleflow !=0)
-    colsnotnull = names(flow.gm)[notnull]
+    notnull = which(flow !=0)
+    colsnotnull = names(flow)[notnull]
     colsnotnull = colsnotnull[! colsnotnull %in% c('msoa1', 'msoa2', 'Total','Total.ethn')]
     
     return(colsnotnull)
                 }
 
 
-updateType   <- function(typetoUpdate)   {
+updateSubflow   <- function(type, n)   {   #given a candidate: splits into mode/ethnicity 
+                                               #  & updates its subtypes figures + Total
+                                                
     
-                parts= str_split_fixed(typetoUpdate,pattern = '_', n = 4)
+                parts= str_split_fixed(type,pattern = '_', n = 4)
                 
                 ethnia = parts[4]                             
-                singleflow[ethnia] = singleflow[ethnia]-1  #check it is 1
+                subflow[ethnia] = subflow[ethnia]-1  #check it is 1
                 
                 
                 ethnia = paste0('_', ethnia)
-                mode= gsub(pattern = ethnia,replacement = '', x = typetoUpdate)
+                mode= gsub(pattern = ethnia,replacement = '', x = type)
                 
-                singleflow[mode] = singleflow[mode]-1  #check it is 1                        
-                
-    
+                subflow[mode] = subflow[mode]-1  #check it is 1
+                return(subflow)
 }
 
 
-allocateMulti     <- function (typetoAllocate)    {
+allocateMulti     <- function (type)    {
+                
+                vprob.subflow = vprob[type]   #prob. vector => filter for type/s
+                suballoc <- rmultinom(n=1,size=1,prob=vprob.subflow)   # allocate randomly
+                
+                allocated = row.names(suballoc)[suballoc!=0]     
+                
+                return(allocated)
+                
+}
+
+
+updateResults   <-  function (type, no)    {
     
-                minialloc <- rmultinom(n=1,size=n,prob=vprob.subflow)   # allocate randomly
-                
-                
-                
-                allocated = names(minialloc)[minialloc!=0]     
-                flow.sp[i, typetoAllocate] = flow.sp[i, typetoAllocate] + 1
-    
-                        }
+                    flow.sp[i, type] = flow.sp[i, type] + no
+                    return(flow.sp)
+}                    
