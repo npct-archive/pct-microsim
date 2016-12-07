@@ -70,19 +70,17 @@ sum(flow.gm$Total==flow.gm$Total.ethn)==nrow(flow.gm)  #must be TRUE, otherwise 
 #commands could give wrong results
 
 #separates flows into: univocal / probabilistic
-sel = which( (flow.gm$White==0  | flow.gm$Non.Wh==0)   )   #| (sel =sum(flow.gm[,c(5:136) !=0])==1 )
-sel1 = which( (flow.gm$White!=0  & flow.gm$Non.Wh!=0))
-# sel+sel1 MUST cover all flow.gm rows=127,627
+sel = which((flow.gm$White==0  | flow.gm$Non.Wh==0)==1)      #| (sel2 =sum(flow.gm[,c(5:136) !=0])==1 )
+sel1 = which( (flow.gm$White!=0  & flow.gm$Non.Wh!=0)==1) 
+# sel+sel1 tesselate flow.gm, COVERING all flow.gm rows  (127,627)
     
-# allmodes= names(flow.gm)[5:136]
-# allethnics = names(flow.gm)[137:138]
-
 #DF to hold the SP rebuilt population
 flow.sp = as.data.frame(matrix(0,nrow = nrow(flow.gm), ncol = length(types)))
 names(flow.sp) = sort(types)
 
 
 ################## REBUILDING POPULATION
+# run STAGE 1 only if NOT built before....)
 ######### STAGE 1: GET PROB. VECTOR per TYPE  +  POPULATE THEM (PERFECT REBUILD)
 
 for (i in sel)  {
@@ -108,11 +106,11 @@ for (i in sel)  {
                 }
 
 cat('STAGE 1: completed....')    #all univocal flows rebuilt
-saveRDS(flow.sp, file.choose())
+saveRDS(flow.sp, './2-output/flow.sp.Rds')
 
 #################
 # some types w still have prob=0 => will never come out !!
-# Replace by 1s to make them possible in dataset
+# Replace by 1s to make them technically possible in dataset
 vprob[vprob==0] = 1
 
 ######### STAGE 2: REBUILD FLOWS WITH MULTIPLE INDIVIDUALS (PROBABILISTIC APPROACH)
@@ -135,7 +133,7 @@ for (i in sel1)    {
 
     subflow = sort(singleflow)   #sort from min to max. Use subflow in loop
         
-  while (sum(subflow)>0)    {  #loop through types while there are people to allocate
+  while (sum(subflow[,modes])>0)    {  #loop through types while there are people to allocate
         
         colsnotnull=selColumns(subflow)
         subflow = subflow[colsnotnull]
@@ -157,7 +155,7 @@ for (i in sel1)    {
         
         
         if (length(subcandidates)==1) {
-            flow.sp = updateResults(subcandidates, n)  #SP matrix allocation
+            flow.sp = updateResults(subcandidates, n)  # allocation
             subflow = updateSubflow(subcandidates, n)  # subflow figures update
             
                 
@@ -180,9 +178,11 @@ cat('STAGE 2: completed....')    #all probabilistic flows rebuilt
 ##### CHECKS on flow.sp
 sum(rowSums(flow.sp)==flow.gm$Total)  # must be 127,627
 
-row.correct= which(rowSums(flow.sp)==flow.gm$Total)  # both in sel/sel1
-row.defect = which(rowSums(flow.sp) < flow.gm$Total) # all in sel
-row.excess = which(rowSums(flow.sp) > flow.gm$Total) #all in sel
+row.correct= which(rowSums(flow.sp)==flow.gm$Total)  # should match nrows
+row.defect = which(rowSums(flow.sp) < flow.gm$Total) # should be 0
+row.excess = which(rowSums(flow.sp) > flow.gm$Total) # should be 0
+
+flow.sp =cbind(Total=rowSums(flow.sp), flow.sp )
 
 saveRDS(flow.sp, './2-output/flow.sp.Rds')
 
