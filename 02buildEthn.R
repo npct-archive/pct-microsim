@@ -19,10 +19,9 @@ flow.gm = dplyr::rename(flow.gm, Total = AllMethods_AllSexes_Age16Plus,
 flow.gm = arrange(flow.gm, Total, msoa1, msoa2)   #sort by increasing Total
 #right.order = read.csv('./0-sources/right_order.csv', header=T, as.is = T)
 
-flow.gm = flow.gm[, c(1:3,255,4:254,256:273)]#flow.gm = flow.gm[, right.order]
+flow.gm = flow.gm[, c(1:3,255,4:254,256:273)]   #flow.gm = flow.gm[, right.order]
 
-flow.gm$White = flow.gm[,"WhiteEnglish"]  +  flow.gm[,"WhiteIrish"]
-                +flow.gm[,"WhiteGypsyorIrishTraveller"]+  flow.gm[, "WhiteOther" ]
+flow.gm$White = flow.gm[,"WhiteEnglish"]+ flow.gm[,"WhiteIrish"]+flow.gm[,"WhiteGypsyorIrishTraveller"]+  flow.gm[,"WhiteOther" ]
 
 flow.gm$Non.Wh <- flow.gm$Total.ethn  - flow.gm$White
 
@@ -50,7 +49,7 @@ flow.gm = flow.gm[, !(names(flow.gm) %in% dropcols)]
 #check: 
 sum(colSums(flow.gm[5:136]))    # all mode colums     
 sum(colSums(flow.gm[137:138]))  # both must be similar, ~1,030,716
-
+(sum(flow.gm$Total==flow.gm$Total.ethn)==nrow(flow.gm))  #must be TRUE: all flows consistent
 
 ### arrange and prepare for prob. vector
 flow.gm = arrange(flow.gm, Total,Total.ethn, msoa1, msoa2)
@@ -66,9 +65,6 @@ vprob = data.frame(matrix(data = 0, nrow = 1,ncol = length(types))  )
 names(vprob) = sort(types)
 
 # select 'univocal' flows
-sum(flow.gm$Total==flow.gm$Total.ethn)==nrow(flow.gm)  #must be TRUE, otherwise next
-#commands could give wrong results
-
 #separates flows into: univocal / probabilistic
 sel = which((flow.gm$White==0  | flow.gm$Non.Wh==0)==1)      #| (sel2 =sum(flow.gm[,c(5:136) !=0])==1 )
 sel1 = which( (flow.gm$White!=0  & flow.gm$Non.Wh!=0)==1) 
@@ -108,8 +104,10 @@ for (i in sel)  {
 cat('STAGE 1: completed....')    #all univocal flows rebuilt
 saveRDS(flow.sp, './2-output/flow.sp.Rds')
 
-#################
-# some types w still have prob=0 => will never come out !!
+#################  vprob calculation
+vprob=colSums(flow.sp)
+
+# some types w still have prob=0 & will never come out 
 # Replace by 1s to make them technically possible in dataset
 vprob[vprob==0] = 1
 
@@ -182,7 +180,11 @@ row.correct= which(rowSums(flow.sp)==flow.gm$Total)  # should match nrows
 row.defect = which(rowSums(flow.sp) < flow.gm$Total) # should be 0
 row.excess = which(rowSums(flow.sp) > flow.gm$Total) # should be 0
 
-flow.sp =cbind(Total=rowSums(flow.sp), flow.sp )
+cor(colSums(flow.sp[c(4:267)]), vprob)   #correlation  prob - SP (>0.97)
+
+
+#add totals & flows
+flow.sp =cbind(Total=rowSums(flow.sp), msoa1=as.character(flow.gm$msoa1), msoa2=as.character(flow.gm$msoa2), flow.sp )
 
 saveRDS(flow.sp, './2-output/flow.sp.Rds')
 
