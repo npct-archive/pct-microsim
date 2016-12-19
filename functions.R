@@ -42,6 +42,12 @@ allocateMulti     <- function (type)    {
 
 updateResults   <-  function (type, no)    {
     
-                    flow.sp[i, type] = flow.sp[i, type] + no
-                    return(flow.sp)
+                    flow.sp1[i, type] = flow.sp1[i, type] + no
+                    return(flow.sp1)
 }                    
+
+updateResults2   <-  function (type, no)    {
+    
+                    flow.sp2[i, type] = flow.sp2[i, type] + no
+                    return(flow.sp2)
+}
