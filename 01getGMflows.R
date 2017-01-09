@@ -53,7 +53,7 @@ for (i in 1:length(ficheros)) {
     rm(flow)                }
 
 
-#delete totals columns
+#rename/delete totals columns
 flow.gm = dplyr::rename(flow.gm, Total = AllMethods_AllSexes_Age16Plus)
 
 
@@ -84,7 +84,7 @@ names(flow.eth) = c('msoa1', 'msoa2', 'All', 'WhiteEnglish', 'WhiteIrish',
 
 ##read CAR OWNERSHIP
 flow.car = read.csv('./0-sources/wu09auk_msoa_v1.csv', header = F, as.is = T) 
-cols=c('msoa1','msoa2','All','car0' ,'car1','car2','car3')
+cols=c('msoa1','msoa2','all','car0' ,'car1','car2','car3')
 names(flow.car)=cols
 
 

@@ -1,6 +1,6 @@
 ################
 #   Reads superCensus file in 1M rows bits,
-#   by using the fields types to cut the megafile in 8 pieces, 1M rows each
+#   by using the fields types to cut the megafile in 8 pieces
 
 
 library(sqldf)

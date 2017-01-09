@@ -8,7 +8,7 @@ library(dplyr)
 library(stringr)
 source('functions.R')
 
-#read ETHNICITY flows
+#read FLOWS G.M. + ETHNICITY flows=flow.gm1
 flow.gm1 = readRDS('./2-output/flow.gm1.Rds')
 names(flow.gm1)
 
@@ -99,8 +99,10 @@ vprob=colSums(flow.sp1)
 #check: some types w still have prob=0 & will never come out
 sum(vprob==0)
 
+
 # Replace by 1s/realistic probability to make them technically possible in dataset
-vprob[vprob==0] = 0.1
+vprob[vprob==0] = 0.01
+saveRDS(vprob, './2-output/vprob.sp1.Rds')
 
 ######### STAGE 2: REBUILD FLOWS WITH MULTIPLE INDIVIDUALS (PROBABILISTIC APPROACH)
 

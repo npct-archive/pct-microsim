@@ -14,7 +14,7 @@ flow.gm2 = readRDS('./2-output/flow.gm2.Rds')
 names(flow.gm2)
 
 #rename cols. + sort
-flow.gm2 = dplyr::rename(flow.gm2, TotalCar=All)
+flow.gm2 = dplyr::rename(flow.gm2, TotalCar=all)
 
 #group car2+car3 into 1 single col.
 flow.gm2$car2plus = flow.gm2$car2 + flow.gm2$car3
@@ -24,7 +24,7 @@ dropcols= c('car2', 'car3')
 flow.gm2 = flow.gm2[, !(names(flow.gm2) %in% dropcols)]
 flow.gm2 = flow.gm2[, c(1:3,136, 4:135, 137:139) ]
 
-#flujos problemáticos
+#keep only good flows (rest should be 0 anyway)
 flow.gm2= flow.gm2[flow.gm2$Total ==flow.gm2$TotalCar, ]
 
 flow.gm2 = arrange(flow.gm2, Total, msoa1, msoa2)   #sort by increasing Total
@@ -48,9 +48,9 @@ names(vprob) = sort(types)
 
 #separates flows into univocal/probabilistic
 non.null=  apply(X = flow.gm2[,c(137:139)], MARGIN = 1, function(x) length(x[x==0]))
-sel= which(non.null==2)     # 2 out of 3 columns null => univocal
+sel= which(non.null==2)     # univocal ==> 2 out of 3 car columns are NULL 
 sel1 = subset(x=c(1:nrow(flow.gm2)), subset = !((1:nrow(flow.gm2)) %in% sel) )
-# sel+sel1 tesselate flow.gm2, COVERING all flow.gm1 rows  (127,071)
+# sel+sel1 tesselate flow.gm2, COVERING all flow.gm1 rows  (126,207)
 
 sum(flow.gm2$Total[sel])     # total univocal population (~99K)
 
@@ -90,9 +90,10 @@ saveRDS(flow.sp2, './2-output/flow.sp2.Rds')
 
 vprob=colSums(flow.sp2)
 
-# some types w still have prob=0 & will never come out 
+# some types still have prob=0 & will never come out 
 # Replace by 1s to make them technically possible in dataset
-vprob[vprob==0] = 0.1
+vprob[vprob==0] = 0.01
+saveRDS(vprob, './2-output/vprob.sp2.Rds')
 
 
 ######### STAGE 2: REBUILD FLOWS WITH MULTIPLE INDIVIDUALS (PROBABILISTIC APPROACH)
@@ -164,7 +165,7 @@ row.correct= which(rowSums(flow.sp2)==flow.gm2$Total)  # should match nrows
 row.defect = which(rowSums(flow.sp2) < flow.gm2$Total) # should be null
 row.excess = which(rowSums(flow.sp2) > flow.gm2$Total) # should be null
 
-cor(colSums(flow.sp2), vprob)   #correlation  prob - SP (>0.97)
+cor(colSums(flow.sp2), vprob)   #correlation  prob - SP (0.92)
 
 
 #add totals & flows
